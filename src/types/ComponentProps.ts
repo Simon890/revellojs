@@ -3,5 +3,6 @@ export type Data = {
 }
 
 export type ComponentProps<Data> = {
-    data: Data
+    data: Data,
+    readonly html: string
 }

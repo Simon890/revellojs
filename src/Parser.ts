@@ -1,4 +1,6 @@
+import { Component } from "./Component";
 import { VDom } from "./VDom";
+import { Data } from "./types/ComponentProps";
 import { HTMLAttributes } from "./types/HTMLAttributes";
 import { HTMLTag } from "./types/HTMLTag";
 import { VNode } from "./types/VNode";
@@ -7,8 +9,10 @@ export class Parser {
 
     private htmlDom: Document;
     private vDom!: VDom;
+    private htmlStr: string;
 
-    constructor(private htmlStr: string) {
+    constructor(private component: Component<Data>) {
+        this.htmlStr = component.html;
         this.htmlDom = new DOMParser().parseFromString(this.htmlStr, "text/html");
         this.vDom = new VDom();
         if(this.htmlDom.querySelector("parsererror")) throw new Error("Bad syntax in html template");
@@ -38,21 +42,30 @@ export class Parser {
             if(vNodeChild) childElementsVNode.push(vNodeChild);
         });
         return this.vDom.createElement(this.getTag(element), this.getAttributes(element), childElementsVNode);
-        // return {
-        //     el: this.vDom.createElement(),
-        //     children: isText ? element.textContent! : childElementsVNode,
-        //     attributes: this.getAttributes(element),
-        //     tag: this.getTag(element)
-        // };
     }
 
     private getAttributes(node : HTMLElement) : HTMLAttributes {
         if(node instanceof Text) return {};
         let attrs : HTMLAttributes = {};
         for (let i = 0; i < node.attributes.length; i++) {
-            const attr = node.attributes[i];
-            attrs[attr.name] = attr.value
+            let name : string = node.attributes[i].name;
+            let value: string | Function = node.attributes[i].value;
+            let funcName: string;
+            
+            if(name.startsWith("on")) {
+                if(!(value in this.component)) throw new Error(`Function ${value} does not exists in ${this.component}`);
+                const f = this.component[value as keyof typeof this.component] as unknown;
+                if(typeof f === "function") {
+                    funcName = value;
+                    value = (e: unknown) => {
+                        // Object.call(this.component[funcName as keyof typeof this.component] as unknown as Function, e);
+                        (this.component[funcName as keyof typeof this.component] as unknown as Function)(e);
+                    }
+                }
+            }
+            attrs[name] = value;
         }
+        console.log(attrs);
         return attrs;
     }
 

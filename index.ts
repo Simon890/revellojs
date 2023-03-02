@@ -31,8 +31,9 @@ const tree = vDom.createElement("div", {
     "text 2"
 ])
 
+const component = new FirstComponent();
 
-const parser = new Parser(html);
+const parser = new Parser(component);
 // const nodes = parser
 console.log("node", tree, parser.toVNode());
 vDom.init(document.querySelector("#app")!, parser.toVNode());

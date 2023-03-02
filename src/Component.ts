@@ -2,7 +2,8 @@ import { ComponentProps, Data } from "./types/ComponentProps";
 
 export abstract class Component<D extends Data> {
     protected data!: D;
-    constructor(protected props: ComponentProps<D>) {
+    public readonly html!: string;
+    constructor(private props: ComponentProps<D>) {
         this.props = props;
         this.data = new Proxy<D>(this.props.data, {
             get(target, property) {
@@ -13,6 +14,7 @@ export abstract class Component<D extends Data> {
                 target[property as keyof typeof target] = newVal;
                 return true;
             }
-        })
+        });
+        this.html = this.props.html;
     }
 }

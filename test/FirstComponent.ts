@@ -1,4 +1,5 @@
 import { Component } from "../src/Component";
+import htmlTemplate from "./htmlTemplate.html";
 
 type Data = {
     name: string
@@ -9,12 +10,12 @@ export class FirstComponent extends Component<Data> {
         super({
             data: {
                 name: "Simon"
-            }
-        })
+            },
+            html: htmlTemplate
+        });
     }
     
-    logData() {
-        console.log(this.data.name);
-        this.data.name = "Pepe";
+    handleClick() {
+        console.log("CLICKED FROM COMPONENT", this.data.name);
     }
 }
