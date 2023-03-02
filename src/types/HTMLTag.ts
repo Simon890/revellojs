@@ -1,0 +1,1 @@
+export type HTMLTag = keyof HTMLElementTagNameMap & string;

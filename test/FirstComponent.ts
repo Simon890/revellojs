@@ -1,17 +1,20 @@
 import { Component } from "../src/Component";
-import firstComponent from "./firstComponent.html";
 
-export class FirstComponent extends Component {
+type Data = {
+    name: string
+}
 
+export class FirstComponent extends Component<Data> {
     constructor() {
-        super({count: 1, name: "User"});
+        super({
+            data: {
+                name: "Simon"
+            }
+        })
     }
-
-    handleClick() {
-        this.reactives.count++;
-    }
-
-    render(): string {
-        return firstComponent;
+    
+    logData() {
+        console.log(this.data.name);
+        this.data.name = "Pepe";
     }
 }

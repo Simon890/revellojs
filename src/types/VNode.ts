@@ -1,17 +1,18 @@
-import { Component } from "../Component";
-import { NodeChildren } from "./NodeChildren";
-import { NodeProps } from "./NodeProps";
+import { HTMLAttributes } from "./HTMLAttributes"
+import { HTMLTag } from "./HTMLTag"
+
+export type Children = Array<VNode | string> | string;
 
 export type VNode = {
-    tag: keyof HTMLElementTagNameMap,
-    props: NodeProps,
-    children: NodeChildren,
-    el?: HTMLElement,
-    component: Component
+    el: HTMLElement,
+    attributes: HTMLAttributes,
+    tag: HTMLTag,
+    children: Children
 } | {
+    el: HTMLElement,
+    attributes: HTMLAttributes,
     tag: "text",
-    props: NodeProps,
-    children: string,
-    el?: Node,
-    component: Component
+    children: string
 }
+
+export type VNodeOrStr = VNode | string;
