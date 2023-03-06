@@ -2,16 +2,18 @@ import { Parser } from "./src/Parser";
 import { VDom } from "./src/VDom";
 import { FirstComponent } from "./test/FirstComponent";
 import { NotificationBridge } from "./src/NotificationBridge";
-import { VNode } from "./src/types/VNode";
+// import { VNode } from "./src/types/VNode";
 import { Component } from "./src/Component";
 import { Attributes, Data } from "./src/types/ComponentProps";
+import { VNode } from "./src/types/VNode";
 
 const notifBridge = NotificationBridge.getInstance();
 notifBridge.onComponentChange(component => {
     if(typeof tree !== "string") {
         let node = findParser(tree, component);
         if(node) {
-            vDom.update(node);
+            document.querySelector("#app")!.innerHTML = "";
+            vDom.init(document.querySelector("#app")!, parser.toVNode());
         }
     }
 });
@@ -35,10 +37,5 @@ let tree = parser.toVNode();
 
 
 vDom.init(document.querySelector("#app")!, tree);
-if(typeof tree !== "string" )
-    console.log("node", tree.children[0]);
 
-// const nodes = parser
-
-// const component = new FirstComponent();
-// component.logData();
+console.log(tree);

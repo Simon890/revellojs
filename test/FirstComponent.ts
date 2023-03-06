@@ -14,8 +14,8 @@ export class FirstComponent extends Component<Data, Attributes> {
     constructor() {
         super({
             data: {
-                name: "",
-                password: ""
+                name: "First Name",
+                password: "Pass"
             },
             components: {
                 SecondComponent

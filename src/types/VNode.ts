@@ -1,4 +1,6 @@
+import { Component } from "../Component";
 import { Parser } from "../Parser";
+import { Attributes, Data } from "./ComponentProps";
 import { HTMLAttributes } from "./HTMLAttributes"
 import { HTMLTag } from "./HTMLTag"
 

@@ -4,7 +4,7 @@ import { VDom } from "./VDom";
 import { Attributes, ComponentDep, Data } from "./types/ComponentProps";
 import { HTMLAttributes } from "./types/HTMLAttributes";
 import { HTMLTag } from "./types/HTMLTag";
-import { VNode, VNodeParser } from "./types/VNode";
+import { Children, VNode, VNodeParser } from "./types/VNode";
 
 export class Parser {
 
@@ -30,7 +30,7 @@ export class Parser {
         if(vNodes === null) throw new Error("");
         if(typeof vNodes === "string") return vNodes;
         vNodes.parser = this;
-        return vNodes;
+        return this.bindValues(vNodes);
     }
 
     private genVNodeRecursive(element: HTMLElement) : VNode | null | string {
@@ -89,33 +89,73 @@ export class Parser {
         return this.component;
     }
 
-    private bindValues(element : HTMLElement) : HTMLElement {
-        return element
-        // const regEx = /(?<=\{\{(\s*))([a-zA-Z0-9]*)*(?=(\s*)\}\})/g;
-        // const text = String(element.textContent);
-        // const match = text.match(regEx);
-        // if(match) {
-        //     let call = () => {
-        //         let str = "";
-        //         match.forEach(value => {
-        //             if(value in this.component.data) {
-        //                 str = text.replace(new RegExp("\\{\\{(\\s*)[a-zA-Z0-9]*" + value + "(\\s*)\\}\\}"), this.component.data[value]);
-        //             }
-        //         });
-        //         return str;
-        //     }
-        //     const proxy = new Proxy<HTMLElement>(element, {
-        //         get(target, property) {
-        //             if(property === "textContent") {
-        //                 console.log("CALL", target, call());
-        //                 return call();
-        //             }
-        //             return target[property as keyof typeof target];
-        //         }
-        //     });
-        //     console.log(proxy, element);
-        //     return proxy;
-        // }
-        // return element;
+    // private bindValues(element : HTMLElement) : HTMLElement {
+    //     return element
+    //     // const regEx = /(?<=\{\{(\s*))([a-zA-Z0-9]*)*(?=(\s*)\}\})/g;
+    //     // const text = String(element.textContent);
+    //     // const match = text.match(regEx);
+    //     // if(match) {
+    //     //     let call = () => {
+    //     //         let str = "";
+    //     //         match.forEach(value => {
+    //     //             if(value in this.component.data) {
+    //     //                 str = text.replace(new RegExp("\\{\\{(\\s*)[a-zA-Z0-9]*" + value + "(\\s*)\\}\\}"), this.component.data[value]);
+    //     //             }
+    //     //         });
+    //     //         return str;
+    //     //     }
+    //     //     const proxy = new Proxy<HTMLElement>(element, {
+    //     //         get(target, property) {
+    //     //             if(property === "textContent") {
+    //     //                 console.log("CALL", target, call());
+    //     //                 return call();
+    //     //             }
+    //     //             return target[property as keyof typeof target];
+    //     //         }
+    //     //     });
+    //     //     console.log(proxy, element);
+    //     //     return proxy;
+    //     // }
+    //     // return element;
+    // }
+
+    private bindValues(vNode : VNode) {
+        const newVnode = vNode;
+        for (let i = 0; i < newVnode.children.length; i++) {
+            const child = newVnode.children[i];
+            if(typeof child !== "string") newVnode.children[i] = this.bindValues(child);
+        }
+        return this.proxyNode(vNode);
+    }
+
+    private proxyNode(vNode: VNode) {
+        const regEx = /(?<=\{\{(\s*))([a-zA-Z0-9]*)*(?=(\s*)\}\})/g;
+        const {children} = vNode;
+        return new Proxy<VNode>(vNode, {
+            get: (target, prop) => {
+                const key = prop as keyof typeof target;
+                if(prop !== "children") return target[key];
+                let arr: Children = [];
+                for (const child of children) {
+                    if(typeof child === "string") {
+                        const match = child.match(regEx);
+                        if(match) {
+                            let str = child;
+                            match.forEach(value => {
+                                if(value in this.component.data) {
+                                    str = str.replace(new RegExp("\\{\\{(\\s*)[a-zA-Z0-9]*" + value + "(\\s*)\\}\\}"), this.component.data[value]);
+                                }
+                            });
+                            arr.push(str);
+                        } else {
+                            arr.push(child);
+                        }
+                    } else {
+                        arr.push(child);
+                    }
+                }
+                return arr;
+            }
+        })
     }
 }
