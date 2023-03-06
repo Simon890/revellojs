@@ -1,42 +1,44 @@
-import { Component } from "./src/Component";
 import { Parser } from "./src/Parser";
 import { VDom } from "./src/VDom";
 import { FirstComponent } from "./test/FirstComponent";
-import html from "./test/htmlTemplate.html";
+import { NotificationBridge } from "./src/NotificationBridge";
+import { VNode } from "./src/types/VNode";
+import { Component } from "./src/Component";
+import { Attributes, Data } from "./src/types/ComponentProps";
+
+const notifBridge = NotificationBridge.getInstance();
+notifBridge.onComponentChange(component => {
+    if(typeof tree !== "string") {
+        let node = findParser(tree, component);
+        if(node) {
+            vDom.update(node);
+        }
+    }
+});
+
+const findParser = (node: VNode, component: Component<Data, Attributes>) : VNode | null | undefined => {
+    if(node.parser && node.parser.getComponent() === component) return node;
+    // if(typeof node.children === "string") return null;
+    for (let i = 0; i < node.children.length; i++) {
+        const child = node.children[i];
+        if(typeof child === "string") continue;
+        const parser = findParser(child, component);
+        if(parser) return parser;
+        continue;
+    }
+}
 
 const vDom = new VDom();
-
-const tree = vDom.createElement("div", {
-    style: "width: 90%",
-    class: "mt-5",
-}, [
-    vDom.createElement("div", {
-        class: "card"
-    }, [
-        vDom.createElement("h1", {
-            class: "card-header"
-        }, "Card Title"),
-        vDom.createElement("div", {
-            class: "card-body"
-        }, [
-            vDom.createElement("h5", {
-                class: "card-title"
-            }, "SubTitle"),
-            vDom.createElement("button", {
-                class: "btn btn-primary",
-                onclick: () => console.log("Clicked")
-            }, "Click me"),
-        ])
-    ]),
-    "text 2"
-])
-
 const component = new FirstComponent();
+let parser = new Parser(component);
+let tree = parser.toVNode();
 
-const parser = new Parser(component);
+
+vDom.init(document.querySelector("#app")!, tree);
+if(typeof tree !== "string" )
+    console.log("node", tree.children[0]);
+
 // const nodes = parser
-console.log("node", tree, parser.toVNode());
-vDom.init(document.querySelector("#app")!, parser.toVNode());
 
 // const component = new FirstComponent();
 // component.logData();

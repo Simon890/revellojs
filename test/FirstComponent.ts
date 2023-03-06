@@ -1,17 +1,24 @@
 import { Component } from "../src/Component";
+import { SecondComponent } from "./SecondComponents";
 import html from "./firstComponent.html";
 
 type Data = {
     name: string,
     password: string
 }
+type Attributes = {
 
-export class FirstComponent extends Component<Data> {
+}
+
+export class FirstComponent extends Component<Data, Attributes> {
     constructor() {
         super({
             data: {
                 name: "",
                 password: ""
+            },
+            components: {
+                SecondComponent
             },
             html
         });

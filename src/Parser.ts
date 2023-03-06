@@ -1,17 +1,20 @@
 import { Component } from "./Component";
+import { NotificationBridge } from "./NotificationBridge";
 import { VDom } from "./VDom";
-import { Data } from "./types/ComponentProps";
+import { Attributes, ComponentDep, Data } from "./types/ComponentProps";
 import { HTMLAttributes } from "./types/HTMLAttributes";
 import { HTMLTag } from "./types/HTMLTag";
-import { VNode } from "./types/VNode";
+import { VNode, VNodeParser } from "./types/VNode";
 
 export class Parser {
 
     private htmlDom: Document;
     private vDom!: VDom;
     private htmlStr: string;
+    // private notifBridge!: NotificationBridge;
 
-    constructor(private component: Component<Data>) {
+    constructor(private component: Component<Data, Attributes>) {
+        // this.notifBridge = NotificationBridge.getInstance();
         this.htmlStr = component.html;
         this.htmlDom = new DOMParser().parseFromString(this.htmlStr, "text/html");
         this.vDom = new VDom();
@@ -25,6 +28,8 @@ export class Parser {
         const child = childElements[0];
         const vNodes = this.genVNodeRecursive(child);
         if(vNodes === null) throw new Error("");
+        if(typeof vNodes === "string") return vNodes;
+        vNodes.parser = this;
         return vNodes;
     }
 
@@ -34,7 +39,11 @@ export class Parser {
             if(element.textContent?.trim().length == 0) return null;
             return String(element.textContent?.trim());
         }
-        
+        if(this.isComponent(element)) {
+            const component = new this.component.components![this.getTag(element) as keyof ComponentDep]();
+            const parser = new Parser(component);
+            return parser.toVNode();
+        }
         const childElements = Object.values(element.childNodes) as HTMLElement[];
         let childElementsVNode : Array<VNode | string> = [];
         childElements.forEach(child => {
@@ -48,7 +57,7 @@ export class Parser {
         if(node instanceof Text) return {};
         let attrs : HTMLAttributes = {};
         for (let i = 0; i < node.attributes.length; i++) {
-            let name : string = node.attributes[i].name;
+            let name = node.attributes[i].name;
             let value: string | Function = node.attributes[i].value;
             let funcName: string;
             
@@ -58,18 +67,55 @@ export class Parser {
                 if(typeof f === "function") {
                     funcName = value;
                     value = (e: unknown) => {
-                        // Object.call(this.component[funcName as keyof typeof this.component] as unknown as Function, e);
                         (this.component[funcName as keyof typeof this.component] as unknown as Function)(e);
                     }
                 }
             }
             attrs[name] = value;
         }
-        console.log(attrs);
         return attrs;
     }
 
     private getTag(element: HTMLElement) : HTMLTag {
         return element.tagName.toLowerCase() as HTMLTag;
+    }
+
+    private isComponent(element: HTMLElement) {
+        if(!this.component.components) return false;
+        return this.getTag(element) in this.component.components;
+    }
+
+    public getComponent() {
+        return this.component;
+    }
+
+    private bindValues(element : HTMLElement) : HTMLElement {
+        return element
+        // const regEx = /(?<=\{\{(\s*))([a-zA-Z0-9]*)*(?=(\s*)\}\})/g;
+        // const text = String(element.textContent);
+        // const match = text.match(regEx);
+        // if(match) {
+        //     let call = () => {
+        //         let str = "";
+        //         match.forEach(value => {
+        //             if(value in this.component.data) {
+        //                 str = text.replace(new RegExp("\\{\\{(\\s*)[a-zA-Z0-9]*" + value + "(\\s*)\\}\\}"), this.component.data[value]);
+        //             }
+        //         });
+        //         return str;
+        //     }
+        //     const proxy = new Proxy<HTMLElement>(element, {
+        //         get(target, property) {
+        //             if(property === "textContent") {
+        //                 console.log("CALL", target, call());
+        //                 return call();
+        //             }
+        //             return target[property as keyof typeof target];
+        //         }
+        //     });
+        //     console.log(proxy, element);
+        //     return proxy;
+        // }
+        // return element;
     }
 }

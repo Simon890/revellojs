@@ -30,41 +30,33 @@ export class VDom {
             element.appendChild(document.createTextNode(node));
         } else {
             element.appendChild(node.el);
-            if(typeof node.children === "string") {
-                // console.log(node)
-                node.el.appendChild(document.createTextNode(node.children));
-            } else {
-                node.children.forEach(child => {
-                    this.init(node.el, child);
-                });
+            // if(typeof node.children === "string") {
+            //     node.el.appendChild(document.createTextNode(node.children));
+            // } else {
+            // }
+            for (let i = 0; i < node.children.length; i++) {
+                const child = node.children[i];
+                this.init(node.el, child);
             }
         }
-
-        // if(typeof node === "string") {
-        //     element.textContent += node;
-        // } else {
-        //     if(typeof node.el === "string") {
-        //         element.textContent += node.el;
-        //     } else {
-        //         element.appendChild(node.el);
-        //         if(typeof node.children === "string") {
-        //             node.el.appendChild(document.createTextNode(node.children));
-        //         } else if(Array.isArray(node.children)) {
-        //             node.children.forEach(child => {
-        //                 if(typeof node.el === "string") {
-        //                     element.textContent += node.el
-        //                 } else {
-        //                     this.init(node.el, child);
-        //                 }
-        //             });
-        //         }
-        //     }
-        // }
     }
 
-    // private generateElement(tag: HTMLTag) {
-    //     if(tag === "text") return tag;
-    //     return document.createElement(tag);
-    // }
+    update(vNode: VNode) {
+        vNode.el.textContent = "";
+        // if(typeof vNode.children === "string") {
+        //     vNode.el.append(document.createTextNode(vNode.children));
+        // } else {
+        // }
+        vNode.children.forEach(child => {
+            if(typeof child !== "string") {
+                console.log("CHILD", child.el)
+                // vNode.el.appendChild(child.el);
+                // console.log("CHILD INSIDE FOR", child)
+                // child.el.textContent = child.el.textContent + "CHANGED";
+            }
+            // child.textContent = vNode.el.textContent;
+            // this.init(vNode.el, child);
+        });
+    }
 
 }
